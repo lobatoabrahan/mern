@@ -14,7 +14,7 @@ function RegistroMP() {
 
   useEffect(() => {
     const fetchMateriasPrimas = async () => {
-      const response = await fetch("http://localhost:3000/api/mp");
+      const response = await fetch("http://192.168.0.112:3000/api/mp");
       const materiasPrimasData = await response.json();
       setMateriasPrimas(materiasPrimasData);
     };
@@ -26,7 +26,7 @@ function RegistroMP() {
 
   // Leer datos de una colección
   const fetchData = (collectionName) => {
-    fetch(`http://localhost:3000/api/${collectionName}`)
+    fetch(`http://192.168.0.112:3000/api/${collectionName}`)
       .then((response) => response.json())
       .then((data) => setData(data))
       .catch((error) => console.error("Error:", error));
@@ -52,7 +52,10 @@ function RegistroMP() {
 
   const handleAddSubmit = (event) => {
     event.preventDefault();
-    const mp = new OrdenCompra(addFormData);
+    const mp = new OrdenCompra({
+      ...addFormData,
+      estado: "pendiente recibir",
+    });
     mp.addData().then((data) => {
       console.log(data);
       fetchData("ordenes_compra"); // Fetch data again after adding new data
@@ -63,10 +66,10 @@ function RegistroMP() {
 
   const handleEditSubmit = (event) => {
     event.preventDefault();
-    const mp = new MP(editFormData);
-    mp.editData(currentId).then((data) => {
+    const ordenCompra = new OrdenCompra(editFormData);
+    ordenCompra.editData(currentId).then((data) => {
       console.log(data);
-      fetchData("mp"); // Fetch data again after adding new data
+      fetchData("ordenes_compra"); // Fetch data again after adding new data
     });
     setEditFormData({});
     setEditMode(false);
@@ -125,6 +128,14 @@ function RegistroMP() {
             value={addFormData.precio || ""}
             onChange={handleAddChange}
           />
+          <Input
+            placeholder={"Cantidad Kg"}
+            name="cantidad_kg"
+            type="number"
+            step="0.01"
+            value={addFormData.cantidad_kg || ""}
+            onChange={handleAddChange}
+          />
           {/* Agrega aquí los campos adicionales para el formulario de agregar */}
           <button
             className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
@@ -162,6 +173,14 @@ function RegistroMP() {
             name="materia_prima"
             type="text"
             value={addFormData.materia_prima || ""}
+            onChange={handleEditChange}
+          />
+          <Input
+            placeholder={"Cantidad Kg"}
+            name="cantidad_kg"
+            type="number"
+            step="0.01"
+            value={addFormData.cantidad_kg || ""}
             onChange={handleEditChange}
           />
           {/* Agrega aquí los campos adicionales para el formulario de edición */}
@@ -210,12 +229,16 @@ function RegistroMP() {
                 );
                 return (
                   <tr key={item._id}>
-                    <td className="px-6 py-4">
-                      {item.fecha}
-                    </td>
+                    <td className="px-6 py-4">{item.fecha}</td>
                     <td className="px-6 py-4">{item.proveedor}</td>
                     <td className="px-6 py-4">
-                      {materiaPrima ? <Link to={`/materia_prima/${materiaPrima._id}`}>{materiaPrima.nombre}</Link> : "N/A"}
+                      {materiaPrima ? (
+                        <Link to={`/materia_prima/${materiaPrima._id}`}>
+                          {materiaPrima.nombre}
+                        </Link>
+                      ) : (
+                        "N/A"
+                      )}
                     </td>
                     <td className="px-6 py-4">{item.precio}</td>
                     <td className="px-6 py-4">

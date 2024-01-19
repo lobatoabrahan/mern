@@ -1,10 +1,10 @@
-export class OrdenCompra {
+export class Inventario {
     constructor(props) {
         Object.assign(this, props);
     }
 
     addData() {
-        return fetch(`http://192.168.0.112:3000/api/ordenes_compra`, {
+        return fetch(`http://192.168.0.112:3000/api/inventario`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ export class OrdenCompra {
         const dataToUpdate = { ...this };
         delete dataToUpdate._id;
 
-        return fetch(`http://192.168.0.112:3000/api/ordenes_compra/${id}`, {
+        return fetch(`http://192.168.0.112:3000/api/inventario/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

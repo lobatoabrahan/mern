@@ -6,7 +6,7 @@ const DetalleProducto = () => {
   const [producto, setProducto] = useState(null);
 
   const fetchProducto = async (id) => {
-    const response = await fetch(`http://localhost:3000/api/mp/${id}`);
+    const response = await fetch(`http://192.168.0.112:3000/api/mp/${id}`);
     const producto = await response.json();
     return producto;
   };
