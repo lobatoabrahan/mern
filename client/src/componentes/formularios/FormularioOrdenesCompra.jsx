@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { OrdenCompra } from "../../modelos/orden_compra";
+import{ OrdenCompra } from "../../modelos/orden_compra";
 import Input from "../inputs/Input";
 import { Link } from "react-router-dom";
 

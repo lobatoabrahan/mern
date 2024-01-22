@@ -1,32 +1,65 @@
-export class MP {
+import {
+    fetchData,
+    postData,
+    putData,
+    updateProperty,
+    fetchOneData,
+    deleteData,
+    addPropertiesToDocument,
+  } from "../server/Server";
+  
+  const coleccion = "mp";
+  
+  export class MP {
     constructor(props) {
-        Object.assign(this, props);
+      Object.assign(this, props);
     }
-
-    addData() {
-        return fetch(`http://localhost:3000/api/mp`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(this),
-        })
-        .then(response => response.json())
-        .catch(error => console.error('Error:', error));
+  
+    async addData() {
+      try {
+        const createdData = await postData(coleccion, this);
+        console.log(createdData);
+        return createdData;
+      } catch (error) {
+        console.error("Error creating data:", error);
+        return undefined;
+      }
     }
-
-    editData(id) {
+  
+    async editData(id) {
+      try {
         const dataToUpdate = { ...this };
         delete dataToUpdate._id;
-
-        return fetch(`http://localhost:3000/api/mp/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToUpdate),
-        })
-        .then(response => response.json())
-        .catch(error => console.error('Error:', error));
+  
+        const updatedData = await putData(coleccion, id, dataToUpdate);
+        console.log(updatedData);
+        return updatedData;
+      } catch (error) {
+        console.error("Error updating data:", error);
+        return undefined;
+      }
     }
-}
+  
+    static async fetchData() {
+      const data = await fetchData(coleccion);
+      return data && data.map((d) => new MP(d));
+    }
+  
+    static async fetchOneData(id) {
+      const data = await fetchOneData(coleccion, id);
+      return new MP(data);
+    }
+  
+    static async updateProperty(id, property, value) {
+      return updateProperty(coleccion, id, property, value);
+    }
+  
+    static async delete(id) {
+      return deleteData(coleccion, id);
+    }
+  
+    static async addProperties(id, properties) {
+      return addPropertiesToDocument(coleccion, id, properties);
+    }
+  }
+  

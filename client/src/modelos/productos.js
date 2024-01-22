@@ -8,9 +8,9 @@ import {
     addPropertiesToDocument,
   } from "../server/Server";
   
-  const coleccion = "ordenes_produccion";
+  const coleccion = "productos";
   
-  export class OrdenesProduccion {
+  export class Productos {
     constructor(props) {
       Object.assign(this, props);
     }
@@ -42,12 +42,12 @@ import {
   
     static async fetchData() {
       const data = await fetchData(coleccion);
-      return data && data.map((d) => new OrdenesProduccion(d));
+      return data && data.map((d) => new Productos(d));
     }
   
     static async fetchOneData(id) {
       const data = await fetchOneData(coleccion, id);
-      return new OrdenesProduccion(data);
+      return new Productos(data);
     }
   
     static async updateProperty(id, property, value) {

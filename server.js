@@ -54,6 +54,39 @@ app.delete('/api/:collection/:id', async (req, res) => {
     res.json(result);
 });
 
+app.post('/api/:collection/:id/addProperty', express.json(), async (req, res) => {
+  const collectionName = req.params.collection;
+  const id = req.params.id;
+  const newProperty = req.body.property;
+  const newValue = req.body.value;
+
+  let updateObject;
+
+  if (typeof newProperty === 'object') {
+    updateObject = newProperty;
+  } else {
+    updateObject = { [newProperty]: newValue };
+  }
+
+  const result = await mongoose.connection.db.collection(collectionName).updateOne(
+    { _id: new mongoose.Types.ObjectId(id) },
+    { $set: updateObject }
+  );
+
+  res.json(result);
+});
+
+app.put('/api/:collection/:id/:property', express.json(), async (req, res) => {
+  const collectionName = req.params.collection;
+  const id = req.params.id;
+  const property = req.params.property;
+  const newValue = req.body.value;
+  let updateObject = {};
+  updateObject[property] = newValue;
+  const result = await mongoose.connection.db.collection(collectionName).updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateObject });
+  res.json(result);
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

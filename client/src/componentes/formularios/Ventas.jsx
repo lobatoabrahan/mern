@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import Input from "../inputs/Input";
 import { Link } from "react-router-dom";
 import { SolicitudProduccion } from "../../modelos/solicitud_produccion";
+import { Productos } from "../../modelos/productos";
+import Autocomplete from "../inputs/Autocomplete";
+import { linkData } from "../../server/Server";
 
 function Ventas() {
   const [solicitudesProduccion, setSolicitudesProduccion] = useState([]);
@@ -11,7 +14,7 @@ function Ventas() {
   const [cantidadKg, setCantidadKg] = useState("");
   const [productos, setProductos] = useState([]);
   const [precio, setPrecio] = useState("");
-  const [nombresProductos, setNombresProductos] = useState({});
+  const [tableData, setTableData] = useState([]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -30,33 +33,41 @@ function Ventas() {
     newSolicitudProduccion.addData().then((data) => {
       console.log(data);
     });
-    fetch("http://192.168.0.112:3000/api/solicitud_produccion") // reemplace 'URL_DE_API' con la URL de su API
-      .then((response) => response.json())
-      .then((data) => setSolicitudesProduccion(data));
+    SolicitudProduccion.fetchData().then((data) => {
+      setSolicitudesProduccion(data);
+    });
   };
 
   useEffect(() => {
-    fetch("http://192.168.0.112:3000/api/solicitud_produccion") // reemplace 'URL_DE_API' con la URL de su API
-      .then((response) => response.json())
-      .then((data) => setSolicitudesProduccion(data));
+    SolicitudProduccion.fetchData().then((data) => {
+      setSolicitudesProduccion(data);
+    });
 
-    fetch("http://192.168.0.112:3000/api/productos") // reemplace 'URL_DE_API' con la URL de su API
-      .then((response) => response.json())
-      .then((data) => {
-        setProductos(data);
-        console.log(data);
-      });
-
-    fetch("http://192.168.0.112:3000/api/productos")
-      .then((response) => response.json())
-      .then((data) => {
-        const nombres = {};
-        data.forEach((producto) => {
-          nombres[producto._id] = producto.nombre;
-        });
-        setNombresProductos(nombres);
-      });
+    Productos.fetchData().then((data) => {
+      setProductos(data);
+    });
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (solicitudesProduccion && productos) {
+        const data = await linkData(
+          solicitudesProduccion,
+          productos,
+          "producto",
+          "nombre"
+        );
+        setTableData(data);
+      }
+    };
+
+    fetchData();
+  }, [solicitudesProduccion, productos]);
+
+  const productosOptions = productos.map((producto) => ({
+    label: producto.nombre,
+    value: producto._id,
+  }));
 
   return (
     <>
@@ -68,27 +79,17 @@ function Ventas() {
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
         />
-        <select
-          className="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          name="materia_prima"
-          value={producto}
-          onChange={(e) => setProducto(e.target.value)}
-        >
-          <option value="" disabled>
-            Seleccione un producto
-          </option>
-          {productos.map((p) => (
-            <option key={p._id} value={p._id}>
-              {p.nombre}
-            </option>
-          ))}
-        </select>
         <Input
-          placeholder={"ID"}
+          placeholder={"Id"}
           name="id"
           type="text"
           value={id}
           onChange={(e) => setId(e.target.value)}
+        />
+        <Autocomplete
+          options={productosOptions}
+          onOptionSelected={(option) => setProducto(option.value)}
+          placeholder={"Producto"}
         />
         <Input
           placeholder={"Cantidad Kg"}
@@ -106,38 +107,41 @@ function Ventas() {
           onChange={(e) => setPrecio(e.target.value)}
         />
 
-        <input type="submit" value="Enviar" />
+        <button
+          type="submit"
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+        >
+          Guardar
+        </button>
       </form>
       <div className="flex flex-col gap-16">
-        <div className="relative overflow-x-auto w-1/2 rounded-lg dark:bg-slate-800 mx-auto">
+        <div className="relative overflow-x-auto shadow-md sm:rounded-lg mx-auto">
           <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
-                {Object.keys(solicitudesProduccion[0] || {}).map((key) => (
-                  <th key={key}>{key}</th>
-                ))}
+                <th className="font-semibold text-left px-4 py-3">fecha</th>
+                <th className="font-semibold text-left px-4 py-3">id</th>
+                <th className="font-semibold text-left px-4 py-3">producto</th>
+                <th className="font-semibold text-left px-4 py-3">
+                  cantidad kg
+                </th>
+                <th className="font-semibold text-left px-4 py-3">precio</th>
               </tr>
             </thead>
             <tbody>
-              {solicitudesProduccion.map((item, index) => (
-                <tr key={index}>
-                  {Object.keys(item).map((key) => (
-                    <td key={key}>
-                    {key === "producto"
-                      ? nombresProductos[item[key]]
-                      : typeof item[key] === "object"
-                      ? item[key]
-                          .map((obj, i) =>
-                            Object.entries(obj)
-                              .map(([k, v]) => `${k}: ${v}`)
-                              .join(", ")
-                          )
-                          .join(", ")
-                      : item[key]}
-                  </td>
-                  ))}
-                </tr>
-              ))}
+              {solicitudesProduccion &&
+                tableData.map((sp) => (
+                  <tr
+                    key={sp._id}
+                    className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700"
+                  >
+                    <td className="px-4 py-3">{sp.fecha}</td>
+                    <td className="px-4 py-3">{sp.id}</td>
+                    <td className="px-4 py-3">{sp.producto}</td>
+                    <td className="px-4 py-3">{sp.cantidad_kg}</td>
+                    <td className="px-4 py-3">{sp.precio}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
